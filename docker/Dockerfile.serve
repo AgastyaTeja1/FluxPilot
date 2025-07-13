@@ -1,0 +1,22 @@
+# docker/Dockerfile.serve
+
+FROM python:3.10-slim AS base
+
+WORKDIR /app
+
+# Install serving dependencies
+COPY serving/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the FastAPI service
+COPY serving/ ./serving/
+
+# Copy the trained model (you'll mount or copy your model artifacts here)
+# In CI/CD you’d replace this with a docker COPY from ECR or volume mount
+# e.g. COPY model/ ./model/
+ENV SERVE_MODEL_DIR=/app/serving/model
+
+WORKDIR /app/serving
+
+# Launch with Gunicorn using our config
+CMD ["gunicorn", "-c", "gunicorn_conf.py", "app:app"]

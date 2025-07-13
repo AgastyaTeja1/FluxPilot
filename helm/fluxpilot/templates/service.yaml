@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "fluxpilot.fullname" . }}-service
+  labels:
+    app: {{ include "fluxpilot.name" . }}
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    app: {{ include "fluxpilot.name" . }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}

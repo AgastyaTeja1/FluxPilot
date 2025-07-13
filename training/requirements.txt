@@ -1,0 +1,17 @@
+# Hugging Face Transformers for model & tokenizer
+transformers>=4.30.0
+
+# PyTorch for model fine-tuning
+torch>=1.12.0
+
+# Datasets library for loading HF datasets
+datasets>=2.10.0
+
+# MLflow for experiment tracking & model registry
+mlflow>=2.5.0
+
+# Optional: load .env files for local dev
+python-dotenv>=0.21.0
+
+# Optional: accelerate for distributed training
+accelerate>=0.20.0

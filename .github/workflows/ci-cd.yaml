@@ -1,0 +1,90 @@
+# .github/workflows/ci-cd.yaml
+
+name: FluxPilot CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}        # e.g. fluxpilot
+      SAGEMAKER_ENDPOINT_NAME: ${{ secrets.SAGEMAKER_ENDPOINT_NAME }}  # e.g. fluxpilot-endpoint
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v3
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
+
+    - name: Install training dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r training/requirements.txt
+
+    - name: Run training smoke test
+      run: |
+        python -c "import training.train"    # ensure import works
+
+    - name: Install serving dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r serving/requirements.txt
+        pip install pytest
+
+    - name: Run tests
+      run: pytest --maxfail=1 --disable-warnings -q
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Log in to Amazon ECR
+      id: ecr-login
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build & tag Docker image
+      run: |
+        IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+        docker build -f docker/Dockerfile.serve -t fluxpilot-serve:latest .
+        docker tag fluxpilot-serve:latest $IMAGE_URI
+
+    - name: Push image to ECR
+      run: |
+        IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+        docker push $IMAGE_URI
+
+    - name: Create or update SageMaker model
+      run: |
+        IMAGE_URI=${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+        aws sagemaker create-model \
+          --model-name ${GITHUB_RUN_ID}-fluxpilot-model \
+          --primary-container Image=$IMAGE_URI \
+          --execution-role-arn ${{ secrets.SAGEMAKER_EXECUTION_ROLE_ARN }} \
+          || true   # ignore failure if model already exists
+
+    - name: Create or update endpoint config
+      run: |
+        aws sagemaker create-endpoint-config \
+          --endpoint-config-name fluxpilot-config \
+          --production-variants VariantName=AllTraffic,ModelName=${GITHUB_RUN_ID}-fluxpilot-model,InitialInstanceCount=1,InstanceType=ml.m5.large \
+          || true
+
+    - name: Create or update SageMaker endpoint
+      run: |
+        aws sagemaker create-endpoint \
+          --endpoint-name ${{ env.SAGEMAKER_ENDPOINT_NAME }} \
+          --endpoint-config-name fluxpilot-config \
+          || aws sagemaker update-endpoint \
+               --endpoint-name ${{ env.SAGEMAKER_ENDPOINT_NAME }} \
+               --endpoint-config-name fluxpilot-config

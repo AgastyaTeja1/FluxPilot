@@ -1,0 +1,80 @@
+# config/config.yaml
+
+default:
+  model:
+    # Hugging Face base model path (Granite LLM)
+    base_model: ${BASE_MODEL}
+    max_new_tokens: 50
+
+  training:
+    epochs: ${EPOCHS}
+    batch_size: ${BATCH_SIZE}
+
+  mlflow:
+    tracking_uri: ${MLFLOW_TRACKING_URI}
+    experiment_name: ${MLFLOW_EXPERIMENT}
+
+  aws:
+    region: ${AWS_REGION}
+    account_id: ${AWS_ACCOUNT_ID}
+    ecr_repository: ${ECR_REPOSITORY}
+    sagemaker_endpoint: ${SAGEMAKER_ENDPOINT_NAME}
+    execution_role_arn: ${SAGEMAKER_EXECUTION_ROLE_ARN}
+    secrets_manager_path: /fluxpilot
+
+  gcp:
+    project_id: ${GCP_PROJECT_ID}
+    artifact_registry: ${GCP_ARTIFACT_REGISTRY}
+    gke_cluster: ${GCP_GKE_CLUSTER}
+
+  serving:
+    model_dir: ${SERVE_MODEL_DIR}
+    host: 0.0.0.0
+    port: ${SERVE_PORT:-8080}
+    workers: ${GUNICORN_WORKERS:-4}
+
+  orchestrator:
+    prefect:
+      api_url: ${PREFECT_API_URL}
+      api_token: ${PREFECT_API_TOKEN}
+      flow_name: FluxPilot_Granite_Pipeline
+
+  logging:
+    level: INFO
+    format: json
+    file:
+      path: logs/app.log
+      rotation: daily
+
+  tracing:
+    otlp_endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    service_name: fluxpilot
+
+  metrics:
+    prometheus:
+      host: 0.0.0.0
+      port: ${METRICS_PORT:-8000}
+
+  auth:
+    method: api_key
+    api_key_header: X-API-KEY
+    secrets_manager_key: ${AUTH_SECRETS_MANAGER_KEY:-/fluxpilot/api_keys}
+
+profiles:
+  dev:
+    mlflow:
+      tracking_uri: http://localhost:5000
+    aws:
+      region: us-west-2
+
+  staging:
+    mlflow:
+      tracking_uri: https://mlflow.staging.example.com
+    aws:
+      region: us-east-1
+
+  prod:
+    mlflow:
+      tracking_uri: https://mlflow.prod.example.com
+    aws:
+      region: us-east-1

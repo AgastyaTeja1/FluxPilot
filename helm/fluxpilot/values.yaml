@@ -1,0 +1,59 @@
+# helm/fluxpilot/values.yaml
+
+# Replica settings
+replicaCount: 2
+
+# Container image
+image:
+  repository: <YOUR_REGISTRY>/fluxpilot-serve
+  tag: latest
+  pullPolicy: Always
+
+# Service configuration
+service:
+  type: ClusterIP
+  port: 80
+
+# Ingress configuration
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: fluxpilot.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: fluxpilot-tls
+      hosts:
+        - fluxpilot.example.com
+
+# Resources & autoscaling
+resources:
+  requests:
+    cpu: "500m"
+    memory: "512Mi"
+  limits:
+    cpu: "1"
+    memory: "1Gi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+
+# Environment variables (you can override via Helm --set)
+env:
+  SERVE_MODEL_DIR: /app/serving/model
+
+# Secrets (referenced in Deployment manifest)
+secrets:
+  apiKeyHeader: X-API-KEY
+  secretsManagerKey: /fluxpilot/api_keys
+
+# Image pull secret (for private registry)
+imagePullSecrets:
+  - name: regcred

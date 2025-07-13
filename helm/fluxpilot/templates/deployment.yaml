@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fluxpilot.fullname" . }}
+  labels:
+    app: {{ include "fluxpilot.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "fluxpilot.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "fluxpilot.name" . }}
+    spec:
+      containers:
+        - name: {{ include "fluxpilot.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          env:
+            - name: SERVE_MODEL_DIR
+              value: "{{ .Values.env.SERVE_MODEL_DIR }}"
+            - name: API_KEY_HEADER
+              value: "{{ .Values.secrets.apiKeyHeader }}"
+            - name: AUTH_SECRETS_MANAGER_KEY
+              value: "{{ .Values.secrets.secretsManagerKey }}"
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 20
+            periodSeconds: 20
+      imagePullSecrets:
+{{ toYaml .Values.imagePullSecrets | indent 8 }}

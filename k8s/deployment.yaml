@@ -1,0 +1,59 @@
+# k8s/deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fluxpilot-serve
+  labels:
+    app: fluxpilot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: fluxpilot
+  template:
+    metadata:
+      labels:
+        app: fluxpilot
+    spec:
+      containers:
+        - name: fluxpilot-serve
+          # Replace with your image location (ECR/GCR)
+          image: <YOUR_REGISTRY>/fluxpilot-serve:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVE_MODEL_DIR
+              value: /app/serving/model
+            - name: API_KEY_HEADER
+              valueFrom:
+                secretKeyRef:
+                  name: fluxpilot-secrets
+                  key: api_key_header
+            - name: AUTH_SECRETS_MANAGER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: fluxpilot-secrets
+                  key: secrets_manager_key
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 20
+      imagePullSecrets:
+        - name: regcred

@@ -1,0 +1,42 @@
+# docker/docker-compose.yml
+
+version: "3.8"
+
+services:
+  mlflow:
+    image: python:3.10-slim
+    container_name: fluxpilot-mlflow
+    working_dir: /app
+    volumes:
+      - ./mlruns:/app/mlruns
+    ports:
+      - "5000:5000"
+    command: >
+      sh -c "pip install --no-cache-dir mlflow &&
+             mlflow server
+               --backend-store-uri sqlite:///mlflow.db
+               --default-artifact-root ./mlruns
+               --host 0.0.0.0"
+
+  train:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.train
+    container_name: fluxpilot-train
+    depends_on:
+      - mlflow
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+
+  serve:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.serve
+    container_name: fluxpilot-serve
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVE_MODEL_DIR=/app/serving/model
+    # In local dev you might mount a local model artifact directory:
+    # volumes:
+    #   - ./model:/app/serving/model
