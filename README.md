@@ -5,7 +5,7 @@ Designed for security, observability, configuration-driven deployments across AW
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
 - **Training & Tracking**  
   - Fine-tune the Granite LLM via Hugging Face + PyTorch  
@@ -45,49 +45,49 @@ Designed for security, observability, configuration-driven deployments across AW
 
 ---
 
-## 📂 Repository Layout
-
-fluxpilot-llm-pipeline/
-├── config/ # Central config YAML
-│ └── config.yaml
-├── training/ # Fine-tuning code & deps
-│ ├── config.py
-│ ├── data_loader.py
-│ ├── hf_utils.py
-│ ├── train.py
-│ └── requirements.txt
-├── serving/ # FastAPI inference service
-│ ├── auth.py
-│ ├── config.py
-│ ├── logging.py
-│ ├── metrics.py
-│ ├── tracing.py
-│ ├── app.py
-│ ├── gunicorn_conf.py
-│ └── requirements.txt
-├── orchestrator/ # Prefect orchestration & config
-│ ├── config.py
-│ └── flow.py
-├── tests/ # Unit, integration & load tests
-│ ├── unit/
-│ ├── integration/
-│ └── load/
-├── k8s/ # Kubernetes manifests
-│ ├── deployment.yaml
-│ ├── service.yaml
-│ ├── hpa.yaml
-│ └── ingress.yaml
-├── helm/ # Helm chart
-│ └── fluxpilot/
-│ ├── Chart.yaml
-│ ├── values.yaml
-│ └── templates/
-├── terraform/ # AWS infra provisioning
-├── .github/workflows/ci-cd.yaml # GitHub Actions CI/CD
-├── docker/ # Dockerfiles & compose
-├── .env.example # Example env vars & secrets paths
-├── README.md
-└── LICENSE
+## Repository Layout
+  ```bash
+  fluxpilot-llm-pipeline/
+  ├── config/ # Central config YAML
+  │ └── config.yaml
+  ├── training/ # Fine-tuning code & deps
+  │ ├── config.py
+  │ ├── data_loader.py
+  │ ├── hf_utils.py
+  │ ├── train.py
+  │ └── requirements.txt
+  ├── serving/ # FastAPI inference service
+  │ ├── auth.py
+  │ ├── config.py
+  │ ├── logging.py
+  │ ├── metrics.py
+  │ ├── tracing.py
+  │ ├── app.py
+  │ ├── gunicorn_conf.py
+  │ └── requirements.txt
+  ├── orchestrator/ # Prefect orchestration & config
+  │ ├── config.py
+  │ └── flow.py
+  ├── tests/ # Unit, integration & load tests
+  │ ├── unit/
+  │ ├── integration/
+  │ └── load/
+  ├── k8s/ # Kubernetes manifests
+  │ ├── deployment.yaml
+  │ ├── service.yaml
+  │ ├── hpa.yaml
+  │ └── ingress.yaml
+  ├── helm/ # Helm chart
+  │ └── fluxpilot/
+  │ ├── Chart.yaml
+  │ ├── values.yaml
+  │ └── templates/
+  ├── terraform/ # AWS infra provisioning
+  ├── .github/workflows/ci-cd.yaml # GitHub Actions CI/CD
+  ├── docker/ # Dockerfiles & compose
+  ├── .env.example # Example env vars & secrets paths
+  ├── README.md
+  ```
 
 ---
 
